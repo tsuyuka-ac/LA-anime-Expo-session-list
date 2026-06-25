@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AX 2026 スケジュール全量</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f8f8f6;color:#1a1a1a;padding:16px}
+h1{font-size:18px;font-weight:600;margin-bottom:12px}
+.controls{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.filter-btn{padding:4px 12px;font-size:11px;border:1px solid #ccc;border-radius:14px;background:#fff;cursor:pointer}
+.filter-btn.active{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+input[type=text]{padding:5px 10px;font-size:13px;border:1px solid #ccc;border-radius:6px;width:100%;margin-bottom:8px}
+.count{font-size:12px;color:#666;margin-bottom:8px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{font-size:11px;font-weight:600;text-align:left;padding:6px 8px;background:#f0ede8;border-bottom:1px solid #ddd;position:sticky;top:0;z-index:1}
+td{padding:6px 8px;vertical-align:top;border-bottom:1px solid #e8e5e0}
+tr:hover{background:#faf9f7}
+.badge{display:inline-block;font-size:10px;padding:1px 7px;border-radius:10px;font-weight:500;white-space:nowrap;margin-bottom:2px}
+.d1{background:#EEEDFE;color:#3C3489}.d2{background:#E1F5EE;color:#085041}
+.d3{background:#FAECE7;color:#712B13}.d4{background:#FBEAF0;color:#72243E}
+.p{background:#E6F1FB;color:#0C447C}.s{background:#EAF3DE;color:#27500A}
+.c{background:#FAEEDA;color:#633806}.f{background:#EEEDFE;color:#534AB7}
+.a{background:#F1EFE8;color:#444441}.w{background:#E1F5EE;color:#0F6E56}
+.b{background:#FCEBEB;color:#791F1F}
+.title{font-weight:500;line-height:1.3;margin-bottom:2px}
+.point{color:#555}
+</style>
+</head>
+<body>
+<h1>🎌 Anime Expo 2026 — 全スケジュール表</h1>
+<div class="controls" id="dayF">
+<button class="filter-btn active" data-day="all">すべての日</button>
+<button class="filter-btn" data-day="7/2">7/2(木)</button>
+<button class="filter-btn" data-day="7/3">7/3(金)</button>
+<button class="filter-btn" data-day="7/4">7/4(土)</button>
+<button class="filter-btn" data-day="7/5">7/5(日)</button>
+</div>
+<div class="controls" id="catF">
+<button class="filter-btn active" data-cat="all">全カテゴリ</button>
+<button class="filter-btn" data-cat="panel">インダストリー</button>
+<button class="filter-btn" data-cat="screen">上映</button>
+<button class="filter-btn" data-cat="concert">コンサート</button>
+<button class="filter-btn" data-cat="fan">ファン</button>
+<button class="filter-btn" data-cat="academic">学術</button>
+<button class="filter-btn" data-cat="workshop">体験</button>
+<button class="filter-btn" data-cat="booth">ブース</button>
+</div>
+<input type="text" id="q" placeholder="キーワード検索（タイトル・企業・登壇者・会場など）">
+<div class="count" id="cnt"></div>
+<table>
+<thead><tr>
+<th style="width:8%">日時</th>
+<th style="width:14%">セッション名</th>
+<th style="width:14%">登壇者 / ゲスト</th>
+<th style="width:10%">会場・ルーム</th>
+<th style="width:10%">企業名</th>
+<th style="width:22%">コンテンツ内容</th>
+<th style="width:22%">見るべきポイント</th>
+</tr></thead>
+<tbody id="tb"></tbody>
+</table>
+<script>
+const R=[
+{day:"7/2",time:"10:00–10:50",cat:"academic",title:"アニメにおける抵抗・回復力・コスプレ・美（学術）",guests:"JAMS研究者",room:"411",company:"JAMS / Anime Expo",content:"JAMSアカデミック・シンポジウム。抗議運動やコスプレがメンタルヘルスに与える影響を議論。",point:"学術視点からアニメ文化を深掘り。業界・研究者向けの専門性の高い内容。"},
+{day:"7/2",time:"10:00–10:50",cat:"panel",title:"Special Creator Session: Yunyun Syndrome / Rhythm Psychosis",guests:"林風肖（ゲームクリエイター）、odyk（イラスト/アニメーター）",room:"408AB",company:"インディークリエイター",content:"ライブデモを交えた制作コンセプト・ビジュアルディレクション・創作哲学のトーク。",point:"独特な世界観を持つインディークリエイター2名の実演セッション。"},
+{day:"7/2",time:"10:00–10:50",cat:"screen",title:"The Exiled Heavy Knight 先行上映 Ep.1-3",guests:"—",room:"JW Marriott Platinum",company:"Crunchyroll",content:"「追放された重騎士」3話先行上映。転生した主人公が最弱クラスで最強を目指すisekai。",point:"本放送前に3話分一気に先行視聴できる貴重な枠。"},
+{day:"7/2",time:"10:30–10:50",cat:"screen",title:"「さよならララ」第1話上映会 & 監督トーク",guests:"小出拓志（監督）",room:"403AB",company:"キネマシトラス / Crunchyroll",content:"人魚の王女が200年後に目覚めるファンタジー「さよならララ」Ep.1上映後に監督トーク。",point:"キネマシトラス制作の新作を世界最速で試聴＋監督が直接語る。"},
+{day:"7/2",time:"10:30–11:20",cat:"panel",title:"WayForward アニメゲーム開発者パネル",guests:"ゲームディレクター陣",room:"404AB",company:"WayForward",content:"アニメインスパイア最新ゲームの新トレーラー・舞台裏・Q&A・独占リビールを展開。",point:"プレゼント抽選あり。独占タイトルリビールに要注目。"},
+{day:"7/2",time:"11:00–16:30",cat:"booth",title:"KADOKAWAブース コスプレイヤー写真撮影（全日程）",guests:"Sou Aono（アクアコスプレイヤー）、Jacki Jing（ホスト）",room:"Exhibit Hall Booth #SH-2720",company:"KADOKAWA World Entertainment",content:"このすばアクアのコスプレイヤーと写真撮影＋記念ポストカードプレゼント。Re:ZERO・このすば・文スト10周年フォトウォール設置。",point:"全4日間開催。限定グッズ・フィギュア抽選会（最終日）。10周年展示は業界最大規模。"},
+{day:"7/2",time:"11:30–12:20",cat:"panel",title:"日本マンガがUSで獲得されるプロセスと成功要因",guests:"Ben Applegate (Kodansha)、Hope Donovan (VIZ)、Leyla Aker (Square Enix)、Rebecca Taylor (Inklore)、Whitney Leopard (Ink Pop)",room:"408AB",company:"Kodansha / VIZ / Square Enix / Inklore",content:"編集者視点から日本マンガがUS市場でヒットする理由・トレンドを語る業界トーク。",point:"日本コンテンツのグローバル展開に関わる第一線の編集者5名が集結する超貴重な回。"},
+{day:"7/2",time:"11:30–12:20",cat:"screen",title:"Hanaori-san & Skeleton Knight S2 上映",guests:"—",room:"JW Marriott Platinum",company:"Crunchyroll",content:"「花織さんは転生しても喧嘩がしたい」と「骸骨騎士様」S2各Ep.1を上映。",point:"新期待作2タイトルを連続先行視聴。"},
+{day:"7/2",time:"12:00–12:50",cat:"workshop",title:"Let's Dance! パラパラ101",guests:"パラパラインストラクター",room:"Concourse Hall E",company:"Anime Expo / SPJA",content:"2000年代のパラパラの歴史紹介と参加型デモンストレーション。",point:"レトロブームの今、USファンと一緒にパラパラを踊れる体験型ワークショップ。"},
+{day:"7/2",time:"12:00–12:50",cat:"panel",title:"ANN Recommends: 今期必見アニメ",guests:"Lynzee Loveridge（ANN編集長）ほか",room:"404AB",company:"Anime News Network",content:"ANN編集部が今シーズンのベストアニメと個別おすすめを紹介。",point:"ANN編集部直伝の優先視聴リスト作りに最適。"},
+{day:"7/2",time:"12:00–12:50",cat:"panel",title:"Doki Doki Literature Clubキャラクター執筆論",guests:"Dan Salvato（DDLC creator）",room:"403AB",company:"Team Salvato",content:"DDLC制作者が人間の不完全さをキャラクターデザインに落とし込む手法を解説。Q&Aあり。",point:"ゲーム業界で異例の反響を呼んだVNのクリエイター本人から直接聞ける創作論。"},
+{day:"7/2",time:"12:30–13:20",cat:"panel",title:"Bandai Namco Presents: エコーズ・フロム・アインクラッド & アンサーレス//バタフライ US初公開",guests:"二見鷹介（プロデューサー）",room:"JW Diamond",company:"Bandai Namco Filmworks",content:"SAOシリーズ新作「エコーズ・フロム・アインクラッド」＆新作アニメ「アンサーレス//バタフライ」ティーザー初公開。",point:"SAOファン必見の新章が初お披露目。プロデューサー直接登壇。"},
+{day:"7/2",time:"13:00–13:50",cat:"screen",title:"Mushoku Tensei S3 先行プレミア Ep.1-2",guests:"—",room:"JW Marriott Platinum",company:"Crunchyroll",content:"「無職転生」S3の最初の2話を世界最速で上映。エリスの修行篇。",point:"最人気isekai続編を真っ先に体験できる貴重枠。"},
+{day:"7/2",time:"13:15–15:15",cat:"screen",title:"MAG MAG 上映会 & ユリヤン・レトリーバー監督Q&A",guests:"ユリヤン・レトリーバー（監督）",room:"The Novo",company:"—",content:"ユリヤンの映画監督デビュー作「MAG MAG」上映＋Q&A＋ライブコメディ。",point:"お笑い界から映画監督に転身した異色の話題作を監督本人とともに楽しめる。"},
+{day:"7/2",time:"14:15–15:05",cat:"workshop",title:"Chance to Switch on with cosmosy（ダンスワークショップ）",guests:"cosmosy（ダンスグループ）",room:"AX Crossing",company:"cosmosy",content:"cosmosyのヒット曲振り付けを直接指導してもらえる参加型ダンスワークショップ。",point:"大人気アーティストと一緒に踊れる体験型イベント。"},
+{day:"7/2",time:"14:30–15:50",cat:"panel",title:"Aniplex of America インダストリーパネル",guests:"豪華ゲスト（未公表）",room:"Petree Hall",company:"Aniplex of America",content:"アニプレックスのアニメ・ゲームの過去・現在・未来を総まとめ。新発表も期待。",point:"AX最大規模の発表パネルの1つ。入場前に列形成必至。大型発表に期待。"},
+{day:"7/2",time:"14:30–15:20",cat:"screen",title:"Victoria of Many Faces & Sasaki and Peeps S2 上映",guests:"—",room:"JW Marriott Platinum",company:"Crunchyroll",content:"「手札が多めのビクトリア」と「佐々木とピーちゃん」S2各Ep.1先行上映。",point:"ジャンル違い新作2本を連続で先取り体験。"},
+{day:"7/2",time:"15:15–16:05",cat:"panel",title:"Manga Mavericks Books コラボレーションパネル",guests:"Manga Mavericks Booksチーム",room:"411",company:"Manga Mavericks Books",content:"急成長中のインディーズ漫画出版社が新ライセンス発表。プレゼント・サプライズあり。",point:"新興US独立系マンガ出版社の最新動向と新ライセンス情報をいち早くキャッチ。"},
+{day:"7/2",time:"15:45–16:35",cat:"panel",title:"Stories Made to Last: Infinite、次の大作を発表",guests:"Infiniteプロデューサー",room:"404AB",company:"Infinite",content:"Infiniteが「I Want to Love You Till Your Dying Day」等の次の大作を初公開。",point:"注目の新興スタジオが次の10年規模の作品を初公開。"},
+{day:"7/2",time:"16:00–16:50",cat:"screen",title:"Overgeared & Saga of Tanya S2 先行上映",guests:"—",room:"JW Marriott Platinum",company:"Crunchyroll",content:"「テムパル/オーバーギアード」と「幼女戦記」S2各Ep.1先行上映。",point:"人気続編2本を一気に先取り。どちらも期待値高い注目タイトル。"},
+{day:"7/2",time:"16:00–17:20",cat:"panel",title:"animate Presents: ALIEN STAGE ライブトーク & 特別発表",guests:"VIVINOS（チーフディレクター）、KANG PD",room:"JW Diamond",company:"animate / ALIEN STAGE",content:"サバイバルオーディション型アニメ「ALIEN STAGE」の独占情報＋特別発表。",point:"昨年入場制限がかかるほどの人気。1,800人規模の会場で特別発表に注目。"},
+{day:"7/2",time:"16:45–17:35",cat:"panel",title:"Square Enix Manga Presents: チェリまほ作者・豊田悠先生",guests:"豊田悠（漫画家）",room:"408AB",company:"Square Enix Manga",content:"「チェリまほ」作者によるトーク＋ライブドローイング。",point:"人気BL漫画家が本人登壇。ライブドローイングは現地限定の体験。"},
+{day:"7/2",time:"17:15–18:05",cat:"panel",title:"BluPetal インダストリーパネル",guests:"BluPetalスタッフ",room:"404AB",company:"BluPetal",content:"BL・GL・少女漫画に特化したBluPetalの新ライセンス・作品紹介。",point:"女性向けマンガのUS展開最新情報が集まる専門パネル。"},
+{day:"7/2",time:"17:15–18:05",cat:"academic",title:"Cosmic Horror in Games, Anime, Manga（学術）",guests:"研究者・パネリスト",room:"409AB",company:"学術・ファン系",content:"コズミック・ホラーの起源と定義、日本メディアへの普及を議論するアカデミックパネル。",point:"近年のホラー作品を理論的に分析。ファン・研究者向けの知的議論。"},
+{day:"7/2",time:"17:30–18:20",cat:"screen",title:"World's Finest Assassin S2 & スーパーの裏でヤニ吸うふたり 上映",guests:"—",room:"JW Marriott Platinum",company:"Crunchyroll",content:"「世界最高の暗殺者 S2」先行上映＋「スーパーの裏でヤニ吸うふたり」上映。",point:"ジャンル異なる2作品を連続視聴。海外勢のリアクションが楽しみ。"},
+{day:"7/2",time:"18:00–19:20",cat:"screen",title:"Star Wars: Visions The Ninth Jedi US初上映",guests:"神山健治（監督）、多田俊介（監督）、伊藤仁（P）、Jacqui Lopez・Josh Rimes（Lucasfilm）",room:"JW Diamond",company:"Production I.G / Lucasfilm",content:"Disney+新シリーズ第1話を日本語・英語字幕で上映。Production I.G×Lucasfilmのコラボ。",point:"スタジオを代表する2監督とLucasfilmのEPが同席する超豪華陣容。"},
+{day:"7/2",time:"18:15–19:05",cat:"academic",title:"Why Japanese Content, Why Now? 学術シンポジウム",guests:"SEGAの内海氏ほか、TV朝日、電通グループ",room:"411",company:"PopPowerProject / SEGA / TV朝日 / 電通",content:"なぜ今、日本コンテンツが世界で勢いを増しているのかを業界視点で分析。",point:"SEGA・TV朝日・電通が一堂に会す。ビジネス・業界関係者向けの高度な考察。"},
+{day:"7/2",time:"18:15–19:05",cat:"fan",title:"X-men VS My Hero Academia ディベートバトル",guests:"ファンチーム2組",room:"511ABC",company:"ファン主催",content:"2チームに分かれてX-menとヒロアカどちらが優れているかを観客参加型で競う。",point:"エンタメ性の高い観客参加型バトル。どんな議論が飛び出すか予測不能。"},
+{day:"7/2",time:"18:45–19:35",cat:"screen",title:"The World Is Dancing Ep.1再放送 & Ep.2世界初公開",guests:"—",room:"403AB",company:"—",content:"能をテーマにした「The World Is Dancing」の第1話再放送＋第2話世界初公開。",point:"日本の伝統芸能×アニメという独自コンセプト作品の続きを最速体験。"},
+{day:"7/2",time:"18:45–19:35",cat:"panel",title:"TBSアニメ特別パネル: タコピーの原罪Pトーク & 新作紹介",guests:"TBSプロデューサー陣",room:"404AB",company:"TBS / 集英社",content:"「タコピーの原罪」の制作秘話・舞台裏・情熱を語る＋TBS今後のアニメラインナップ紹介。",point:"社会現象となった問題作の制作側が語る秘話。次の注目作の情報も解禁予定。"},
+{day:"7/2",time:"20:00–23:00",cat:"concert",title:"J-POP SOUND CAPSULE",guests:"ALI、Roselia、SPYAIR、菅野よう子、高橋洋子",room:"Crypto.com Arena",company:"Anime Expo / SPJA",content:"J-POPとアニメ音楽の大型コンサート。アニメ主題歌・ロック・J-POPが混在する3時間。",point:"菅野よう子＋高橋洋子「残酷な天使のテーゼ」が同じステージに立つ奇跡の一夜。"},
+{day:"7/2",time:"20:30–21:20",cat:"fan",title:"PokéSketch Showdown",guests:"—",room:"406AB",company:"ファン主催",content:"制限時間内に様々なポケモンを描いて観客が審査する参加型お絵かきバトル。",point:"ポケモン×お絵かきの楽しいファン参加イベント。プレゼントあり。"},
+{day:"7/2",time:"22:15–23:35",cat:"fan",title:"Texas Waifu Wars 3: 5周年記念 (18+)",guests:"ファン",room:"JW Diamond",company:"ファン主催",content:"「最高のワイフ」をめぐって参加者が自分の推しキャラを弁護し合うバトルパネル。5周年。",point:"毎年恒例の超人気ファンバトル。どのキャラが選ばれるか予測不能な盛り上がり。"},
+{day:"7/2",time:"22:15–23:35",cat:"fan",title:"Love and Deepspace: After Dark (18+、非公式)",guests:"コスプレイヤー（非公式）",room:"408AB",company:"ファン主催（非公式）",content:"Love and Deepspaceキャラクターのコスプレイヤーが登場。観客参加型ゲームとQ&A。",point:"非公式ながら毎年人気の夜遊び参加型パネル。"},
+{day:"7/2",time:"22:15–23:35",cat:"fan",title:"Yaoi & Bara Tropes & Trends 2.0 (18+)",guests:"ファンパネリスト",room:"402A",company:"ファン主催",content:"ヤオイ・バラのマンガ・アニメに見られる定番要素とトレンドを掘り下げる。",point:"BL・男性向け同性愛コンテンツのトレンド分析。コミュニティの本音が聞ける。"},
+{day:"7/3",time:"10:00–10:50",cat:"academic",title:"Black Fandom and Anime（学術）",guests:"JAMS研究者",room:"411",company:"JAMS",content:"黒人アニメファンダムとキャラクターアイデンティティについてのアカデミックディスカッション。",point:"多様性・包摂の視点からアニメファンダムを研究する。"},
+{day:"7/3",time:"10:00–11:00",cat:"panel",title:"Gachiakuta S2 独占初公開 キャスト&スタッフ",guests:"市川蒼（ルド役）、菅沼文彦（監督）、天野直樹（P）",room:"Peacock Theater",company:"Crunchyroll",content:"「ガチアクタ」S1総括＋S2の新映像を世界初公開。",point:"S2新映像の初出し。トラッシュアクションの続編情報を最速でキャッチ。"},
+{day:"7/3",time:"10:00–11:20",cat:"screen",title:"京アニ「二十世紀電氣目録」全米初公開 & 監督Q&A",guests:"太田稔（監督）、瀬波里梨（P）",room:"JW Marriott Platinum",company:"京都アニメーション / Netflix",content:"Netflix配信に先駆けてEp.1-2を全米初公開。監督・プロデューサーによるトークセッション。",point:"京アニ最新作をNetflix配信より先に映画館規模で体験。監督直接登壇。"},
+{day:"7/3",time:"10:30–11:50",cat:"panel",title:"Spike Chunsoft 公式パネル2026",guests:"坂下剛平（P）、小高和剛、英語VA陣",room:"JW Diamond",company:"Spike Chunsoft",content:"ダンガンロンパ15周年＋STEINS;GATE RE:BOOT直前イベント。VAライブ・クイズ・プレゼント。",point:"「ダンガンロンパ2x2」のスニークピークが見られるかも！"},
+{day:"7/3",time:"11:30–12:20",cat:"panel",title:"Yen Press インダストリーパネル",guests:"Yen Pressスタッフ",room:"511ABC",company:"Yen Press",content:"マンガ・ライトノベル・マンファの新ライセンス発表とQ&A。",point:"日本の人気作品の英語ライセンス最新情報をいち早くキャッチ。"},
+{day:"7/3",time:"11:45–12:45",cat:"panel",title:"You and I Are Polar Opposites S2 ファンイベント",guests:"鈴代紗弓（鈴木役）、坂田将吾（谷役）",room:"Peacock Theater",company:"Crunchyroll",content:"S2 Ep.1上映＋VA2人による英語吹替ライブ・思い出トーク。",point:"声優2人の生吹替パフォーマンスはAXだけの体験。正反対ラブコメファン必見。"},
+{day:"7/3",time:"12:00–12:50",cat:"panel",title:"Shonen Jump「KILL BLUE」特別ホームルーム",guests:"藤巻忠俊（作者）、制作チーム",room:"JW Marriott Platinum",company:"集英社 / Crunchyroll",content:"「キルアオ」S1フィナーレに合わせ、作者と制作チームが秘話・ライブドローイング・クイズを展開。",point:"「黒子のバスケ」作者が直接登壇。ライブドローイングとプレゼントが魅力。"},
+{day:"7/3",time:"12:00–12:50",cat:"panel",title:"天野喜孝: 新たな創造への挑戦",guests:"天野喜孝（アーティスト）",room:"Petree Hall",company:"天野喜孝 / YEN STUDIO",content:"伝説的アーティスト・天野喜孝の最新アニメプロジェクト「ZAN」の独占トレーラー初公開。",point:"ファイナルファンタジーで知られる巨匠の最新プロジェクトが初解禁。"},
+{day:"7/3",time:"12:30–13:20",cat:"panel",title:"響け！ユーフォニアム 最終楽章 特別パネル & 独占映像",guests:"石原立也（総監督）、瀬波里梨（P）",room:"JW Diamond",company:"京都アニメーション",content:"京アニ・石原総監督による最終楽章の特別パネル＋独占初公開映像。",point:"響けシリーズの完結に向けた独占映像が初解禁。京アニ最高峰の1本の集大成。"},
+{day:"7/3",time:"12:30–13:50",cat:"panel",title:"STEEL BALL RUN JoJo 特別パネル",guests:"菅野祐悟（作曲家）ほか",room:"Crypto.com Arena (Main Events)",company:"Warner Bros. Japan / David Production",content:"「鋼鉄の球戯と神の手」アニメを記念したスペシャルパネル。菅野祐悟によるライブ演奏あり。",point:"作曲家の生演奏は絶対必見。大会場で大発表も期待。今年のAX最注目パネルの1つ。"},
+{day:"7/3",time:"13:00–13:50",cat:"panel",title:"Kodansha Presents: ブルーロック 金城宗幸×ノ村優介",guests:"金城宗幸（作者）、ノ村優介（イラスト）",room:"408AB",company:"講談社",content:"「ブルーロック」の原作者とイラスト担当の2人によるトークセッション。",point:"ブルーロック作者2人が揃い踏みするレアな機会。世界規模の人気作の舞台裏へ。"},
+{day:"7/3",time:"13:30–14:30",cat:"panel",title:"Crunchyroll Showcase",guests:"未公表",room:"Peacock Theater",company:"Crunchyroll",content:"新作スニークピーク・スタジオスポットライト・サプライズ発表が集中する年次大発表会。",point:"Crunchyrollの今後1年を左右する複数の大型発表が集中する最注目枠。"},
+{day:"7/3",time:"14:45–15:35",cat:"panel",title:"What's New From Inklore",guests:"Inkloreスタッフ",room:"404AB",company:"Inklore",content:"マンガ・グラフィックノベル出版社Inkloreの新刊・注目ラインナップ発表。",point:"女性・多様性向け作品に力を入れるInkloreの最新動向が集中。"},
+{day:"7/3",time:"14:45–16:05",cat:"screen",title:"The Jaadugar: A Witch in Mongolia（Science SARU）US初公開",guests:"山田尚子（監督）、Abel Góngora（監督）",room:"JW Diamond",company:"Science SARU",content:"「天幕のジャードゥーガル」Ep.1-2の全米初公開＋メイキングトーク。",point:"「けいおん!」「リズと青い鳥」の山田尚子監督最新作。Science SARUとのコラボ。"},
+{day:"7/3",time:"15:00–15:50",cat:"panel",title:"Bandai Namco Filmworks インダストリーパネル",guests:"特別ゲスト（未公表）",room:"408AB",company:"Bandai Namco Filmworks",content:"バンナムフィルムワークスの新作・続報をゲストとともに発表。",point:"バンナム新作アニメの独占情報が飛び出す可能性。"},
+{day:"7/3",time:"15:00–16:20",cat:"panel",title:"HATSUNE MIKU: COLORFUL STAGE! ファンミーティング",guests:"廣瀬大介（天馬司役）、Machico（草薙寧々役）",room:"Crypto.com Arena (Main Events)",company:"Craft Egg / Colorful Palette",content:"「初音ミク：カラフルステージ！」の特別ファンミーティング。トークショー・音楽・特別演出。",point:"日本人VA2名が来場。プロセカファン向けの濃密なファンイベント。"},
+{day:"7/3",time:"15:00–16:20",cat:"panel",title:"A-1 Pictures インダストリーパネル",guests:"清水聡（A-1 Pictures代表取締役社長）",room:"JW Marriott Platinum",company:"A-1 Pictures / Aniplex",content:"新作「GROW UP SHOW -ひまわりサーカス-」先行視聴＋今後のラインナップ発表。",point:"Fate/strange Fake・MASHLEのスタジオが仕掛ける夏新作を最速チェック。社長直接登壇。"},
+{day:"7/3",time:"15:15–16:15",cat:"panel",title:"Witch Hat Atelier キャスト&原作者トーク",guests:"白浜鴎（漫画家）、本村碧唯（ここ役）、花江夏樹（キフレ役）",room:"Peacock Theater",company:"Crunchyroll",content:"「とんがり帽子のアトリエ」の制作秘話を原作者+声優とともに語る。",point:"原作者・白浜鴎本人登壇。漫画家×声優が生で語る貴重なコラボパネル。"},
+{day:"7/3",time:"16:15–17:05",cat:"panel",title:"Studio KAI「勇者刑に処す」クリエイタートーク",guests:"益山将士（P）ほかスタッフ",room:"403AB",company:"Studio KAI / Crunchyroll",content:"「勇者刑に処す」制作の舞台裏・こだわりを語るトークショー。",point:"注目アクション作品の制作秘話を直接聞ける。会場キャパ少なめのため早めに行動。"},
+{day:"7/3",time:"16:30–19:00",cat:"screen",title:"「どこよりも遠い場所にいる君へ」世界初上映",guests:"和田純一（監督）、永瀬アンナ（VA）、向井紘一郎（P）",room:"408AB",company:"松竹 / 集英社",content:"阿部暁子原作アニメ映画の世界初上映会（約2.5時間）。上映後に監督・VA・Pによるトーク。",point:"本屋大賞受賞作品の映画化を世界最速で鑑賞。監督・キャスト全員登壇の充実イベント。"},
+{day:"7/3",time:"16:45–18:05",cat:"screen",title:"Kagurabachi アニメ世界初上映",guests:"スタッフ&キャスト",room:"JW Diamond",company:"集英社 / スタジオ",content:"週刊少年ジャンプ「カグラバチ」TVアニメEp.1冒頭20分を世界初上映＋特別パネル。",point:"AXでの世界プレミア。ジャンプ最注目新作アニメの一番乗りを体験できる特別枠。"},
+{day:"7/3",time:"17:00–18:50",cat:"panel",title:"KADOKAWA アニメ10周年パネル（Re:ZERO・このすば・文スト）",guests:"田中翔（Re:ZERO P）、小倉理恵（このすば P）、倉兼千明（文スト P）",room:"JW Marriott Platinum",company:"KADOKAWA / Crunchyroll",content:"Re:ZERO S4 Ep.1世界初上映＋3作品プロデューサーによる10周年円卓会議。次の10年の発表も。",point:"Re:ZERO S4世界初上映が最大の目玉。入場後には記念うちわのプレゼントあり。"},
+{day:"7/3",time:"17:00–18:00",cat:"panel",title:"Demon Slayer 無限城 記念イベント",guests:"花江夏樹（炭治郎）、櫻井孝宏（義勇）、早見沙織（しのぶ）",room:"Peacock Theater",company:"Crunchyroll / Aniplex / ufotable",content:"「鬼滅の刃 無限城編」劇場公開を振り返る特別イベント。ufotable新作映像も初公開。",point:"日本人VA3名が揃い踏みのレア機会。ufotable次回作の情報も飛び出す可能性。"},
+{day:"7/3",time:"17:15–18:05",cat:"panel",title:"Dark Horse Manga 40周年パネル",guests:"Dark Horseスタッフ",room:"411",company:"Dark Horse Manga",content:"創業40周年を祝い複数の新ライセンスを発表。無料ポスタープレゼント。",point:"複数の新ライセンス発表とプレゼントが狙い目。"},
+{day:"7/3",time:"17:15–18:05",cat:"panel",title:"GUSH COMICS（BLコミックレーベル）業界パネル",guests:"海王社スタッフ",room:"409AB",company:"海王社（GUSH COMICS）",content:"BLコミック専門レーベルGUSH COMICSの新作・今後の展開を紹介。",point:"BL・女性向け漫画のUS展開最前線を知るパネル。"},
+{day:"7/3",time:"18:45–19:35",cat:"screen",title:"BLACK TORCH Ep.1 字幕上映プレミア",guests:"AJ Beckles（次郎役）、Keith Silverstein（羅刹役）",room:"JW Diamond",company:"VIZ Media / Crunchyroll",content:"超自然アクション「BLACK TORCH」Ep.1字幕版初上映＋英語VA登壇・グッズプレゼント。",point:"英語VA2名が生登壇。新作の初舞台挨拶を目撃できる。"},
+{day:"7/3",time:"18:45–19:35",cat:"fan",title:"GO-GO JoJo! ジョジョゲームショー",guests:"ジョジョファン",room:"402A",company:"ファン主催",content:"ジョジョポーズ・トリビア・ゲームで競い合うインタラクティブなファンパネル。",point:"ジョジョファンが集う最高のファンエンタメ。参加型で大いに盛り上がる。"},
+{day:"7/3",time:"18:45–20:05",cat:"panel",title:"伊藤潤二傑作コレクション 上映会",guests:"—",room:"411",company:"TV東京 / Global Stage Hollywood",content:"テレビ東京制作の伊藤潤二ホラー・アンソロジーシリーズの上映会。2026年7月放送作品。",point:"伊藤潤二作品のUS上映はレア。ホラーファン必見。"},
+{day:"7/3",time:"18:45–19:45",cat:"panel",title:"Daemons of the Shadow Realm（黄泉のツガイ）",guests:"小野賢章（ユル役）、宮本夢（アサ役）",room:"Peacock Theater",company:"Crunchyroll / スクウェア・エニックス",content:"「黄泉のツガイ」声優2人がトーク＋AX限定の生吹替パフォーマンスを披露。",point:"AX限定生吹替は現場でしか体験できない。荒川弘FMAファン必見。"},
+{day:"7/3",time:"19:30–20:50",cat:"panel",title:"Cyberpunk: Edgerunners 2 発表パネル (18+)",guests:"声優・Studio TRIGGERスタッフ",room:"Crypto.com Arena (Main Events)",company:"CD Projekt RED / Studio TRIGGER",content:"「サイバーパンク エッジランナーズ2」スタンドアローン新作の最新情報を生発表。",point:"エッジランナーズ続編の最速情報。TRIGGERから直接Night City新章の詳細を聞ける。"},
+{day:"7/3",time:"20:00–22:00",cat:"concert",title:"Sukeban ワールドチャンピオンシップファイト",guests:"女子プロレスラーたち、サプライズゲスト",room:"The Novo",company:"Sukeban",content:"日本女子プロレスリングリーグがAXで世界チャンピオンシップ試合を開催。",point:"アニメイベントで本格的なプロレス観戦というユニークな体験。"},
+{day:"7/3",time:"20:30–21:00",cat:"concert",title:"キズナAI スペシャルライブ at AX 2026",guests:"キズナAI",room:"Petree Hall",company:"Kizuna AI Inc.",content:"キズナAIがオリジナルEDM楽曲・人気曲リミックスを交えたDJセットを披露。",point:"バーチャルタレントの先駆けが海外の大舞台でライブパフォーマンス。"},
+{day:"7/3",time:"20:30–21:30",cat:"panel",title:"薬屋のひとりごと スペシャルステージ",guests:"悠木碧（猫猫役）、大塚剛央（壬氏役）",room:"Peacock Theater",company:"Crunchyroll / NTV",content:"「薬屋のひとりごと」日本人VA2人がAXステージで語るスペシャルトーク。",point:"猫猫×壬氏の両VAが揃うレアな機会。NTV共同開催で豪華感あり。"},
+{day:"7/3",time:"21:30–22:50",cat:"fan",title:"You Laugh You Leave: Live On Stage",guests:"ジミー・ヒアほかコメディアン・声優",room:"Petree Hall",company:"—",content:"コスプレした声優・クリエイターたちが少年漫画のヒーロー・魔法少女に扮してコメディショー。",point:"アニメ×コメディの深夜エンタメ。笑いながらAXを締めくくる。"},
+{day:"7/3",time:"22:15–23:35",cat:"fan",title:"Ship It Or Skip It (18+)",guests:"ファンパネリスト",room:"402A",company:"ファン主催",content:"推しカップルが「真実の愛」か「幻」かをファンが徹底討論するバトルパネル。",point:"どんなカップルが取り上げられるかが最大の謎。参加型で盛り上がる。"},
+{day:"7/3",time:"23:00–23:50",cat:"fan",title:"BL Bingo! (18+)",guests:"—",room:"406AB",company:"ファン主催",content:"BLをテーマにしたビンゴゲーム・おすすめ作品紹介・クイズで楽しむファンパネル。",point:"BLファンの夜の恒例イベント。どのIPが登場するか要チェック。"},
+{day:"7/4",time:"10:00–10:50",cat:"panel",title:"BLEACH 千年血戦篇 The Calamity Stage Ep.1上映",guests:"森田成一（一護役）、Johnny Yong Bosch（英語一護）",room:"Crypto.com Arena (Main Events)",company:"VIZ Media",content:"「BLEACH 千年血戦篇」最終パートEp.1先行字幕上映＋日米VA登壇・グッズプレゼント。",point:"日本語・英語両方の一護が同じステージに立つ超レア機会。最終章開幕を最速体験。"},
+{day:"7/4",time:"10:00–11:20",cat:"screen",title:"「ふつつかな悪女ではございますが」北米初上映",guests:"菱川花菜（ヴィラネル役）、古川慎（ゲスト）",room:"403AB",company:"TOHO animation",content:"「ふつつかな悪女ではございますが」Ep.1-2の北米初上映。スペシャルゲスト登壇。",point:"TOHO animation主催。悪役令嬢ものの注目新作を北米最速体験。"},
+{day:"7/4",time:"10:00–10:50",cat:"panel",title:"Arc System Works Developer Table Talk",guests:"Arc System Worksデベロッパーチーム",room:"511ABC",company:"Arc System Works",content:"Guilty Gear -Strive-等の最新情報・制作秘話を開発者が直接共有。無料スウォグあり。",point:"格闘ゲームファン向けの開発者直接トーク。最新アップデート情報も。"},
+{day:"7/4",time:"10:00–10:50",cat:"screen",title:"I Became a Legend after My 10 Year-Long Last Stand 先行上映",guests:"—",room:"JW Marriott Platinum",company:"Crunchyroll",content:"「10年戦争を一人で戦い続けた英雄」Ep.1-2先行上映。戦争英雄が平和を生きるisekai。",point:"新作isekai系の2話先行。世界観把握に最適。"},
+{day:"7/4",time:"10:00–11:00",cat:"screen",title:"A Returner's Magic Should Be Special S2 プレミア",guests:"鈴代紗弓",room:"Peacock Theater",company:"Crunchyroll",content:"「帰還者の魔法は特別でした」S2を2話先行上映。鈴代紗弓がゲスト出演。",point:"S1ファン待望の続編を最速試聴＋声優ゲスト参加。"},
+{day:"7/4",time:"11:30–12:20",cat:"panel",title:"Warner Bros. Japan アニメ制作15周年パネル",guests:"Laura Post、Damien Haas（英語VA）",room:"408AB",company:"Warner Bros. Japan",content:"STEEL BALL RUN・北斗の拳・Record of Ragnarok III等の最新情報・15周年記念プレゼント。",point:"複数人気タイトルの最新情報が一度に得られる。英語VA2名も登壇。"},
+{day:"7/4",time:"11:45–12:45",cat:"panel",title:"Mob Psycho 100 10周年記念パネル",guests:"伊藤節生（モブ役）、神谷浩史（霊幻役）、立川譲（監督）",room:"Peacock Theater",company:"Crunchyroll",content:"モブサイコ100の10周年をキャスト＋監督とともに祝うスペシャルパネル。",point:"監督＋主要声優2名が揃い踏み。10年の集大成を語る感動必至の回。"},
+{day:"7/4",time:"12:00–12:50",cat:"screen",title:"Crunchyroll: The Villager of Level 999 先行上映",guests:"—",room:"JW Marriott Platinum",company:"Crunchyroll",content:"「LV999の村人」Ep.1-2先行上映。モンスター跋扈の世界で最弱クラスの少年が無双する新作。",point:"新作isekai系の2話先行。世界観把握に最適。"},
+{day:"7/4",time:"12:00–13:20",cat:"panel",title:"Production I.G × WIT STUDIO 合同インダストリーパネル",guests:"石川光久（I.G代表）、和田丈嗣（WIT代表）、神山健治、荒木哲郎、多田俊介（各監督）",room:"Crypto.com Arena (Main Events)",company:"Production I.G / WIT STUDIO",content:"2スタジオの代表と主要監督5名が集結する史上最大規模のスペシャルパネル。制作秘話と最新情報。",point:"アニメ界の最高峰スタジオ2社が合同で登壇。監督3名の生の言葉を聞ける超貴重な機会。"},
+{day:"7/4",time:"12:00–13:20",cat:"screen",title:"魔法騎士レイアース 世界初上映",guests:"高橋李依（風鳳寺役）、早見沙織（エメロード役）",room:"JW Diamond",company:"東映アニメーション等",content:"「魔法騎士レイアース」新作アニメEp.1-2のワールドプレミア上映。CLAMP人気作のリブート。",point:"CLAMPの名作がリバイバル。高橋李依・早見沙織の豪華キャストが初登壇。"},
+{day:"7/4",time:"13:30–14:30",cat:"screen",title:"Black Clover S2 Ep.1 世界初上映",guests:"梶原岳人（アスタ役）、種村綾隆（監督）",room:"Peacock Theater",company:"集英社 / Crunchyroll",content:"「ブラッククローバー」S2 Ep.1の世界初上映。監督とアスタ役VAが登壇してパネルトーク。",point:"待望のブラクロ新シーズンを世界最速で体験。監督＋主役VAの生トーク。"},
+{day:"7/4",time:"14:00–14:50",cat:"panel",title:"Studio TRIGGER パネル2026",guests:"Cyberpunk: Edgerunners 2 監督・脚本家",room:"The Novo",company:"Studio TRIGGER",content:"「エッジランナーズ2」制作舞台裏＋現行プロジェクト最新情報＋次回フラッグシップタイトルを初披露！",point:"新フラッグシップタイトルの世界初発表が最大の注目点。TRIGGERファン必須の回。"},
+{day:"7/4",time:"14:15–15:05",cat:"panel",title:"Tokyo Revengers 三天戦争編 キャストパネル",guests:"新祐樹（武道役）、林勇（マイキー役）、福西勝也（ドラケン役）",room:"JW Marriott Platinum",company:"講談社 / Crunchyroll",content:"「東京リベンジャーズ 三天戦争編」VA3名によるトーク＋限定ダイジェスト映像初公開。",point:"3名のVAが揃う贅沢な機会。2026年10月放送開始の新シーズン情報も解禁の可能性。"},
+{day:"7/4",time:"14:30–15:20",cat:"panel",title:"My Hero Academia 10周年パネル",guests:"山下大輝（デク役）、内山昂輝（志賀役）",room:"Crypto.com Arena (Main Events)",company:"TOHO animation",content:"ヒロアカ10周年を記念し、ショートクリップ「俺もヒーローだ」世界初公開。",point:"TOHO animation主催でショートアニメ世界初公開。10年の軌跡を振り返る感動の節目。"},
+{day:"7/4",time:"14:45–16:05",cat:"screen",title:"名探偵コナン 100万ドルの五稜星 US初上映",guests:"—",room:"403AB",company:"東映アニメーション / TMS",content:"全世界1.5億ドル超の興行収入を記録した2024年の「名探偵コナン 100万ドルの五稜星」を北米初上映。",point:"US未公開だった2024年の大ヒットコナン映画をついに北米で体験できる。"},
+{day:"7/4",time:"14:45–16:05",cat:"panel",title:"GHOST IN THE SHELL × Science SARU 特別パネル&US初公開",guests:"Science SARUスタッフ",room:"JW Diamond",company:"Production I.G / Science SARU",content:"攻殻機動隊の大胆リブート版をScience SARUが制作。米国初上映＋コンセプト解説。",point:"伝説的IPの全く新しい解釈を最速体験。湯浅政明率いるSARUが攻殻に挑む。"},
+{day:"7/4",time:"15:00–15:50",cat:"panel",title:"転生したらスライムだった件 スペシャルパネル",guests:"岡咲美保（リムル役）、豊口めぐみ（ラファエル役）",room:"Petree Hall",company:"TOHO animation / 講談社",content:"転スラS4放映中に合わせ、リムル役・ラファエル役VA2人によるトークパネル。",point:"2名のVAが揃う機会。人気の国民的isekai最新シーズンの舞台裏を直接聞ける。"},
+{day:"7/4",time:"15:00–15:50",cat:"panel",title:"FGO 9周年 × TYPE-MOON Projects パネル",guests:"川澄綾子（アルトリア役）、植田佳奈（イシュタル役）、Albert Kao（Aniplex）",room:"Petree Hall",company:"Aniplex of America / TYPE-MOON",content:"Fate/Grand Orderの9周年と今後のTYPE-MOONプロジェクトについての発表＋VA登壇。",point:"人気モバイルゲームの日本人VA2名が初来場。TYPE-MOON新情報も期待できる。"},
+{day:"7/4",time:"15:15–16:05",cat:"academic",title:"Masters of Anime: 日本アニメ制作の巨匠たち（学術）",guests:"谷口守康氏、高橋良輔氏、吉田徹氏",room:"411",company:"MyAnimeList",content:"50年以上のキャリアを持つ伝説的クリエイター3名による日本アニメ制作の過去・現在・未来。",point:"業界の生き証人3名から直接聞く。アニメ史ファン・業界志望者に超貴重な回。"},
+{day:"7/4",time:"15:15–16:15",cat:"screen",title:"Clevatess S2 先行上映 & アニメーションマスタークラス",guests:"Clevatess制作スタッフ",room:"Peacock Theater",company:"Crunchyroll",content:"制作スタッフがアニメーション技術を解説＋Ep.1先行上映。シーズン2サプライズあり。",point:"作品の技術的側面を制作者から直接学べる珍しいマスタークラス形式。"},
+{day:"7/4",time:"15:15–16:35",cat:"screen",title:"Thunder 3 プレミアパネル",guests:"Thunder 3制作スタッフ",room:"408AB",company:"制作スタジオ",content:"「Thunder 3」Ep.1-2のプレミア上映＋制作スタッフが制作秘話・アニメーションのこだわりを語る。",point:"スタッフ直接登壇のプレミア体験。新作アクションの第一印象をいち早く。"},
+{day:"7/4",time:"17:00–17:50",cat:"panel",title:"MAKE YOUR DEBUT AS MANGA-KA! KADOKAWA × 渡辺博之編集者",guests:"渡辺博之（伝説の編集者）",room:"未公表",company:"KADOKAWA",content:"「エヴァ」「ケロロ軍曹」担当の渡辺博之編集者がヒット作のDNAと約2,000件の世界投稿を解説。",point:"伝説の編集者から直接ヒット作の秘密を学べる。グローバルな漫画家デビューを狙う人必見。"},
+{day:"7/4",time:"17:00–18:20",cat:"panel",title:"NEEDY GIRL OVERDOSE IRL Event",guests:"木村義高（Aniplex P）",room:"Petree Hall",company:"Aniplex of America",content:"バイラルで話題の「NEEDY GIRL OVERDOSE」のリアルイベント。プロデューサーが登壇。",point:"ゲームからリアルに飛び出すユニークなコンセプトイベント。SNS世代のカルト的人気作。"},
+{day:"7/4",time:"17:15–18:05",cat:"panel",title:"VIZ Anime パネル",guests:"森田成一、Johnny Yong Bosch、AJ Beckles、Keith Silverstein",room:"408AB",company:"VIZ Media",content:"BLEACH・BLACK TORCHの声優が集結し舞台裏トーク＋VIZ独占新発表。",point:"VIZの独占新発表と豪華VA陣の共演は見逃せない。プレゼントあり。"},
+{day:"7/4",time:"17:45–18:35",cat:"panel",title:"Omoi マンガ業界パネル",guests:"Omoi スタッフ",room:"404AB",company:"Omoi",content:"漫画アプリ兼出版社「Omoi」のIndustryパネル。新興マンガ企業の最新事業展開を解説。",point:"US新興マンガ企業の動向を知る。デジタル×マンガビジネスに関心ある人向け。"},
+{day:"7/4",time:"18:00–18:50",cat:"panel",title:"Frieren: Beyond Journey's End TOHO animationスペシャルイベント",guests:"北川朋也（監督）、齊藤圭一郎（副監督）、福士裕一郎（P）、小島慶一（キャラデザ）",room:"JW Marriott Platinum",company:"TOHO animation",content:"「葬送のフリーレン」S2振り返り＋S3発表。キャラデザ・小島氏によるライブ作画。",point:"S3詳細発表＋スタッフ全員集合の貴重なパネル。ライブ作画は現地のみの特典。"},
+{day:"7/4",time:"18:30–19:20",cat:"screen",title:"Crunchyroll: Firefly Wedding & The Ogre's Bride 先行上映",guests:"—",room:"JW Diamond",company:"Crunchyroll",content:"「ホタルの嫁入り」と「鬼の花嫁」各Ep.1を先行上映する大人向け2本立て企画。",point:"時代劇×妖怪の純和風ラブストーリー2本を連続試聴できる粋な組み合わせ。"},
+{day:"7/4",time:"18:45–19:45",cat:"panel",title:"The Oblivious Saint Can't Contain Her Power スペシャルプレミア",guests:"高橋李依（聖女役）、古川慎（ゲスト）",room:"Peacock Theater",company:"Crunchyroll",content:"「鈍感聖女はあふれ出す魔力を自覚しない」Ep.1-2を最速上映＋日本人VA2名登壇トーク。",point:"高橋李依×古川慎という豪華VAコンビ。新作ファンタジーを2話先取り。"},
+{day:"7/4",time:"20:00–20:50",cat:"panel",title:"Seven Seas Entertainment インダストリーパネル",guests:"Seven Seasスタッフ",room:"404AB",company:"Seven Seas Entertainment",content:"Seven Seas Entertainmentの新ライセンス・今後のラインナップ発表。",point:"英語圏有数のマンガ・ライトノベル出版社の新情報が集中する業界パネル。"},
+{day:"7/4",time:"20:00–20:50",cat:"fan",title:"DEBATE TIME! HOT SHOUNEN TAKES",guests:"ファンパネリスト",room:"409AB",company:"ファン主催",content:"最も熱い少年漫画論争をUSファンが繰り広げるディベートパネル。",point:"USファンたちのリアルな少年漫画観が聞けるエンタメ討論。"},
+{day:"7/4",time:"20:00–20:50",cat:"panel",title:"Beyond the Trigger: Edgerunners × Wuthering Waves",guests:"Kuro Games / Studio TRIGGERスタッフ",room:"JW Marriott Platinum",company:"Kuro Games / Studio TRIGGER",content:"エッジランナーズ×ウェザリングウェーブスのコラボ秘話＋ゲームの最新情報。特別発表の可能性も。",point:"ゲーム×アニメのコラボ内幕を両社スタッフが直接語る。新発表にも期待。"},
+{day:"7/4",time:"20:30–21:30",cat:"screen",title:"Reborn as a Space Mercenary プレミア上映",guests:"古川慎",room:"Peacock Theater",company:"Crunchyroll",content:"「宇宙傭兵に転生：最強宇宙船で目覚めた！」AX2話先行上映＋古川慎ゲスト出演。",point:"古川慎が土曜日に複数パネルで登壇する充実した1日。SFisekai新作の世界観を先取り。"},
+{day:"7/4",time:"21:30–22:50",cat:"panel",title:"FAKKU インダストリーパネル (18+)",guests:"FAKKUスタッフ",room:"JW Marriott Platinum",company:"FAKKU",content:"US最大手の成人向けマンガ・アニメ出版社FAKKUの歴史・現行プロジェクト・新発表。",point:"18+向けコンテンツのUS展開を牽引するFAKKUの動向が分かる業界パネル。"},
+{day:"7/4",time:"22:00–23:20",cat:"fan",title:"Hear Me Out Weeb Edition (18+)",guests:"ファンパネリスト",room:"411",company:"ファン主催",content:"本当に恥ずかしいアニメの推しキャラをさらし合って議論するパネル。",point:"AXの深夜パネルらしい正直トーク。参加者の勇気と愛に笑いが止まらない。"},
+{day:"7/4",time:"22:45–23:35",cat:"fan",title:"Boys Love and Fujoshi: 歴史と影響 (18+)",guests:"腐女子コミュニティ・パネリスト",room:"404AB",company:"ファン主催",content:"腐女子文化・BLの歴史・2D男性同性愛産業の現状を深掘りするアカデミック系ファンパネル。",point:"BL文化の成立と変遷を俯瞰する知的な深夜パネル。"},
+{day:"7/4",time:"22:45–23:35",cat:"fan",title:"Lobotomy Kaisen (18+)",guests:"JJKファン",room:"408AB",company:"ファン主催",content:"呪術廻戦とそのストレス解消ミームコミュニティ「ロボトミーカイセン」の歴史と分析。",point:"JJKの過激なファンダムが生んだサブカルチャーを当事者目線で分析。"},
+{day:"7/5",time:"10:00–10:50",cat:"panel",title:"JUJUTSU KAISEN 5周年記念パネル",guests:"主要キャスト（未公表）",room:"Crypto.com Arena (Main Events)",company:"TOHO animation",content:"「呪術廻戦」5周年記念。S3・キャラクター・名バトルの振り返りと舞台裏話。",point:"TOHO animation主催。5年間の集大成を声優と振り返る感動の節目パネル。"},
+{day:"7/5",time:"10:30–11:20",cat:"panel",title:"Good Smile Company: 初音ミク Exclusive Showcase 2026",guests:"GSCスタッフ",room:"—",company:"Good Smile Company",content:"ミクの新プロジェクト世界初解禁・最新フィギュアアップデート・レーシングミク情報。",point:"ミクの全く新しいプロジェクトが世界初公開。コレクターとファン必見のフィギュア情報も。"},
+{day:"7/5",time:"10:30–11:50",cat:"academic",title:"Walt's Footsteps: 手塚治虫物語（学術）",guests:"アニメ研究者・パネリスト",room:"406AB",company:"学術・ファン系",content:"ウォルト・ディズニーと手塚治虫の経歴を振り返り、互いの影響とアニメーションへの貢献を考察。",point:"アニメ史の源流を辿る知的パネル。アニメーション史に興味がある人向け。"},
+{day:"7/5",time:"12:00–14:10",cat:"screen",title:"超時空要塞マクロス 愛・おぼえていますか 北米初公式上映",guests:"—",room:"The Novo",company:"BIGWEST",content:"「超時空要塞マクロス 愛・おぼえていますか」の北米公式初スクリーニング。2時間10分の大作。",point:"伝説作品の北米初上映という歴史的瞬間。マクロスファン・アニメ史ファン必携。"},
+{day:"7/5",time:"12:15–13:05",cat:"panel",title:"GKIDS インダストリーパネル",guests:"GKIDSスタッフ",room:"404AB",company:"GKIDS",content:"細田守・湯浅政明・スタジオジブリ作品を手がけるGKIDSが今後のラインナップを発表。",point:"アートハウス系アニメの北米展開最新情報。スタジオジブリ関連の情報も期待できる。"},
+{day:"7/5",time:"13:45–15:05",cat:"panel",title:"Make Your Debut as an Author in Japan! (KADOKAWA)",guests:"有馬聡（編集者）、Frettiko、Kazesenken（デビュー作家）",room:"403AB",company:"KADOKAWA",content:"英語圏作家が日本でライトノベルデビューする方法を解説。Q&Aと執筆ヒントあり。",point:"英語作家がKADOKAWAから日本デビューできるプロジェクトの全貌が明かされる。"},
+{day:"7/5",time:"13:45–14:30",cat:"fan",title:"AX 2026 フィードバックパネル",guests:"SPJAスタッフチーム",room:"409AB",company:"Anime Expo / SPJA",content:"AX参加者の声を直接受け付けるフィードバックセッション。スタッフが真剣に回答。",point:"来年のAXをより良くするための意見を直接届けられる。スタッフの熱意も必見。"},
+{day:"7/5",time:"14:15–15:05",cat:"fan",title:"薬屋のひとりごと ファンパネル ディベート",guests:"ファンパネリスト",room:"402A",company:"ファン主催",content:"「猫猫と壬氏がどうなるか」などを中心に、作品についてファンが真剣討論。",point:"作品への深い愛が生む熱い議論。薬屋ファンの本音トーク。"},
+{day:"7/5",time:"16:00–17:00",cat:"panel",title:"クロージングセレモニー",guests:"AX関係者、パフォーマー",room:"Crypto.com Arena (Main Events)",company:"Anime Expo / SPJA",content:"AX2026を締めくくる閉会式。パフォーマンスとAX恒例のクロージングトラディション。",point:"4日間の総括。次年度の発表やサプライズも過去に存在。感動のラストシーン。"}
+];
+
+let dF="all",cF="all",q="";
+function dC(d){return d==="7/2"?"d1":d==="7/3"?"d2":d==="7/4"?"d3":"d4"}
+function cC(c){return{panel:"p",screen:"s",concert:"c",fan:"f",academic:"a",workshop:"w",booth:"b"}[c]||"p"}
+function cL(c){return{panel:"インダストリー",screen:"上映",concert:"コンサート",fan:"ファン",academic:"学術",workshop:"体験",booth:"ブース"}[c]||c}
+function dL(d){return d==="7/2"?"7/2(木)":d==="7/3"?"7/3(金)":d==="7/4"?"7/4(土)":"7/5(日)"}
+function render(){
+  const sq=q.toLowerCase();
+  const f=R.filter(r=>{
+    if(dF!=="all"&&r.day!==dF)return false;
+    if(cF!=="all"&&r.cat!==cF)return false;
+    if(sq&&![r.title,r.guests,r.room,r.company,r.content,r.point].join(" ").toLowerCase().includes(sq))return false;
+    return true;
+  });
+  document.getElementById("cnt").textContent=f.length+"件表示（全"+R.length+"件）";
+  document.getElementById("tb").innerHTML=f.map(r=>`<tr>
+<td><span class="badge ${dC(r.day)}">${dL(r.day)}</span><br><small style="color:#777">${r.time}</small></td>
+<td><div class="title">${r.title}</div><span class="badge ${cC(r.cat)}">${cL(r.cat)}</span></td>
+<td><small>${r.guests}</small></td>
+<td><small>${r.room}</small></td>
+<td><small style="font-weight:600">${r.company}</small></td>
+<td><small style="color:#555">${r.content}</small></td>
+<td><small class="point">⭐ ${r.point}</small></td>
+</tr>`).join("");
+}
+document.getElementById("dayF").addEventListener("click",e=>{
+  const b=e.target.closest("[data-day]");if(!b)return;
+  dF=b.dataset.day;
+  document.querySelectorAll("[data-day]").forEach(x=>x.classList.remove("active"));
+  b.classList.add("active");render();
+});
+document.getElementById("catF").addEventListener("click",e=>{
+  const b=e.target.closest("[data-cat]");if(!b)return;
+  cF=b.dataset.cat;
+  document.querySelectorAll("[data-cat]").forEach(x=>x.classList.remove("active"));
+  b.classList.add("active");render();
+});
+document.getElementById("q").addEventListener("input",e=>{q=e.target.value;render();});
+render();
+</script>
+</body>
+</html>
